@@ -1,5 +1,5 @@
-import argparse, datetime, logging, random, time
-import csv
+import datetime, math, logging, random, sys, time
+import argparse, csv
 from faker import Faker
 
 fake = Faker('en_US')
@@ -81,8 +81,15 @@ def main():
   CUSTOMER_FILE_NAME = args.customer_file
   ACCOUNT_FILE_NAME = args.account_file
 
+  toolbar_width = 100
+
   try: 
-    row_counter = 1 
+    # setup toolbar
+    sys.stdout.write("[%s]" % (" " * toolbar_width))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+    toolbar_progress = 0
+
     customer = generate_customer_record()
     account = generate_account_record(customer['Cust_Id'])
 
@@ -96,16 +103,22 @@ def main():
     acct_file_writer.writeheader()
     acct_file_writer.writerow(account)
 
-    for _ in range(CUSTOMER_RECORD_COUNT - 1): 
+    for _i in range(CUSTOMER_RECORD_COUNT - 1): 
       customer = generate_customer_record()
       cust_file_writer.writerow(customer)
 
       account = generate_account_record(customer['Cust_Id'])
       acct_file_writer.writerow(account)
 
+      if math.floor(_i * toolbar_width / CUSTOMER_RECORD_COUNT) >= toolbar_progress: 
+        toolbar_progress += 1
+        sys.stdout.write("-")
+        sys.stdout.flush()
+
   finally: 
     cust_file.close()
     acct_file.close()
+    sys.stdout.write("\n")
 
 if __name__ == '__main__':
   main()
